@@ -22,3 +22,4 @@ class Config:
     TOKENWTHASAPP = os.getenv("TOKENWTHASAPP")
     ACCOUNTID = os.getenv("ACCOUNTID")
     TESTNUMBER = os.getenv("TESTNUMBER")
+    PHONE_NUMBER_ID = os.getenv("PHONE_NUMBER_ID")

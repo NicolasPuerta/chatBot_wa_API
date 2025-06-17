@@ -1,0 +1,38 @@
+version: '3.8'
+
+services:
+  chatbot:
+    build:
+      context: ..
+      dockerfile: Docker/Dockerfile
+    container_name: chatbot_app
+    ports:
+      - "5000:5000"
+    env_file:
+      - ../env/.env
+    volumes:
+      - ../logs:/app/logs
+    depends_on:
+      - mongo
+
+  mongo:
+    image: mongo:6
+    container_name: chatbot_mongo
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongo_data:/data/db
+
+  ngrok:
+    image: ngrok/ngrok:latest
+    container_name: chatbot_ngrok
+    command: http chatbot:5000
+    env_file:
+      - ./ngrok.yml
+    ports:
+      - "4040:4040"
+    depends_on:
+      - chatbot
+
+volumes:
+  mongo_data:
