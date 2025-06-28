@@ -46,7 +46,11 @@ def verify():
 @app.route('/webhook', methods=['POST'])
 def receive_message():
     try:
-        data = request.get_json()   
+        data = request.get_json()
+        if "object" not in data or data["object"] != "whatsapp_business_account":
+            msg = "Objeto no válido en la solicitud"
+            logger.error(msg)  
+            return jsonify({"error": "Objeto no válido"}), 400
         if not data:
             msg = "No se recibieron datos en la solicitud"
             logger.error(msg)

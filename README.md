@@ -14,20 +14,19 @@ CHATBOT_WA_API/
 │   └── intents.json        # Intenciones de conversación para el NLP
 │
 ├── database/
-│   ├── db.py               # Conexión y funciones de base de datos
-│   └── models.py           # Modelos de datos (ORM o SQL)
+│   ├── model.py            # Conexión a PostgreSQL con SQLAlchemy
+│   ├── actions.py          # Inicialización de tablas
+│   └── models/             # Modelos ORM: Usuario, Pedido, Imagen
 │
 ├── Docker/
-│   ├── docker-compose.yml  # Orquestación de servicios
+│   ├── docker-compose.yml  # Orquestación de servicios (Flask, PostgreSQL, ngrok)
 │   └── Dockerfile          # Imagen del servicio Flask
 │
+├── uploads/                # Carpeta donde se almacenan imágenes subidas
 ├── logs/                   # Archivos de logs del sistema
-│
 ├── test/                   # Pruebas unitarias y de integración
-│
-├── .env                    # Variables de entorno (API Keys, etc.)
-├── .gitignore
-├── app.py                  # wrapper general o runner
+├── .env                    # Variables de entorno (NO subir a GitHub)
+├── app.py                  # Wrapper general o launcher principal
 ├── config.py               # Configuración global del proyecto
 ├── requirements.txt        # Dependencias del proyecto
 ```
@@ -37,6 +36,8 @@ CHATBOT_WA_API/
 - 📲 Recepción de pedidos vía **API de WhatsApp**
 - 🤖 Respuestas automáticas usando intents (`intents.json`)
 - 📅 Agendamiento de pedidos en **Google Calendar**
+- 🖼️ Subida y asociación de imágenes a pedidos
+- 🧾 Registro de pedidos por usuario
 - 📁 Generación de archivos Excel:
   - `pedidos_confirmados.xlsx`
   - `pedidos_enviados.xlsx`
@@ -47,6 +48,7 @@ CHATBOT_WA_API/
 - Cuenta de WhatsApp Business API 
 - API de Google Calendar habilitada con archivo `credentials.json`
 - Python 3.10+
+- Docker y Docker Compose
 
 ## 🛠️ Instalación
 
@@ -71,9 +73,16 @@ pip install -r requirements.txt
 WHATSAPP_TOKEN=tu_token_api
 GOOGLE_CREDENTIALS=credentials.json
 CALENDAR_ID=xxx@group.calendar.google.com
+DATABASE_URL=postgresql://postgres:secret@chatbot_postgres:5432/chatbotdb
 ```
 
-4. Corre el servidor:
+4. Inicializa la base de datos (si aún no existen las tablas):
+
+```bash
+python database/actions.py
+```
+
+5. Corre el servidor:
 
 ```bash
 python bot/main.py
@@ -84,11 +93,11 @@ O con Docker:
 ```bash
 docker-compose -f Docker/docker-compose.yml up --build
 ```
-
 ## 📦 ¿Qué hace cada módulo?
 
 | Módulo         | Descripción |
 |----------------|-------------|
+| `uploads/`         | Almacenamiento de imagenes |
 | `bot/`         | Procesamiento de mensajes entrantes y lógica de conversación |
 | `database/`    | Manejo de la base de datos y modelos (pedidos, usuarios, etc.) |
 | `data/intents.json` | Define intenciones y frases para el NLP del bot |
@@ -106,7 +115,6 @@ Al confirmar o enviar pedidos, el sistema genera automáticamente visualizacione
 - 🗓️ Ventas por fecha
 
 Las gráficas se guardan en `/logs/ventas/` o se pueden servir vía Flask en un endpoint tipo `/stats`.
-
 
 ## 👨‍💻 Desarrollador
 

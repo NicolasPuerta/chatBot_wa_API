@@ -10,10 +10,8 @@ class Config:
     DEBUG = FLASK_ENV == "development"
     TESTING = False
 
-    # MongoDB
-    MONGO_URI = os.getenv("MONGO_URI", "mongodb://localhost:27017/chatbot")
-    MONGO_DBNAME = os.getenv("MONGO_DBNAME")
-    MONGO_COLLECTION = os.getenv("MONGO_COLLECTION")
+    # PostgreSQL
+    POSTGRES_URL = os.getenv("POSTGRES_URL")
 
     # Seguridad
     SECRET_KEY = os.getenv("SECRET_KEY", "clave_por_defecto_insegura")

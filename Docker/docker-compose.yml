@@ -12,16 +12,22 @@ services:
       - ../env/.env
     volumes:
       - ../logs:/app/logs
+      - ../uploads:/app/uploads  # <--- aquí se guardarán las imágenes
     depends_on:
-      - mongo
+      - postgres
 
-  mongo:
-    image: mongo:6
-    container_name: chatbot_mongo
+  postgres:
+    image: postgres:15
+    container_name: chatbot_postgres
+    restart: always
     ports:
-      - "27017:27017"
+      - "5432:5432"
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: secret
+      POSTGRES_DB: chatbotdb
     volumes:
-      - mongo_data:/data/db
+      - postgres_data:/var/lib/postgresql/data
 
   ngrok:
     image: ngrok/ngrok:latest
@@ -35,4 +41,4 @@ services:
       - chatbot
 
 volumes:
-  mongo_data:
+  postgres_data:
