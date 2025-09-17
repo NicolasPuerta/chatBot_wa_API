@@ -1,7 +1,13 @@
-from models.Usuarios import Usuario
-from models.Pedidos import Pedidos
-from models.Imagenes import Imagenes
-from model import DatabaseConfig
+import os
+import sys
+# -------------------- imports --------------------
+CURRENT_PATH = '/'.join(os.path.abspath(__file__).replace('\\', '/').split('/')[:-2])
+sys.path.append(CURRENT_PATH)
+
+from database.models.Usuarios import Usuario
+from database.models.Pedidos import Pedido
+from database.models.Imagenes import Imagen
+from database.model import DatabaseConfig
 
 # -------------------- imports --------------------
 import os
@@ -17,14 +23,8 @@ class Database:
     Esta clase proporciona métodos para insertar, actualizar, eliminar y obtener datos de la base de datos.
     Utiliza SQLAlchemy para interactuar con la base de datos.
     """
-
     def __init__(self):
-
-        self.db = DatabaseConfig().SessionLocal
-        self.Base = DatabaseConfig().Base
-        self.engine = DatabaseConfig().engine
-        # crear las tablas si no existen
-        self.Base.metadata.create_all(bind=self.engine)
+        self.db = DatabaseConfig().SessionLocal()
 
     # -------------------- Inserts --------------------
     def insertar_usuario(self, usuario: Usuario):
@@ -33,34 +33,30 @@ class Database:
         self.db.refresh(usuario)
         return usuario
 
-    def insertar_pedido(self, pedido: Pedidos):
+    def insertar_pedido(self, pedido: Pedido):
         self.db.add(pedido)
         self.db.commit()
         self.db.refresh(pedido)
         return pedido
 
-    def insertar_imagen(self, imagen: Imagenes):
+    def insertar_imagen(self, imagen: Imagen):
         # Copiar imagen a carpeta local
-        _, ext = os.path.splitext(imagen.url)
-        nombre_archivo = f"{uuid4().hex}{ext}"
-        destino = os.path.join(UPLOAD_FOLDER, nombre_archivo)
-        shutil.copy(imagen.url, destino)
-        imagen.url = destino
         self.db.add(imagen)
         self.db.commit()
-        self.db.refresh(imagen)
         return imagen
     
     # -------------------- Selects --------------------
     def obtener_usuarios(self):
         return self.db.query(Usuario).all()
+    
+    def obtener_usuario(self, telefono: str):
+        return self.db.query(Usuario).filter(Usuario.telefono == telefono).first()
 
     def obtener_pedidos(self):
-        return self.db.query(Pedidos).all()
+        return self.db.query(Pedido).all()
 
     def obtener_imagenes(self):
-        return self.db.query(Imagenes).all()
-    
+        return self.db.query(Imagen).all()
 
     # -------------------- Updates --------------------
 
@@ -68,7 +64,8 @@ class Database:
         self.db.merge(usuario)
         self.db.commit()
         return usuario
-    def actualizar_pedido(self, pedido: Pedidos):
+    
+    def actualizar_pedido(self, pedido: Pedido):
         self.db.merge(pedido)
         self.db.commit()
         return pedido
@@ -78,10 +75,10 @@ class Database:
         self.db.delete(usuario)
         self.db.commit()
 
-    def eliminar_pedido(self, pedido: Pedidos):
+    def eliminar_pedido(self, pedido: Pedido):
         self.db.delete(pedido)
         self.db.commit()
 
-    def eliminar_imagen(self, imagen: Imagenes):
+    def eliminar_imagen(self, imagen: Imagen):
         self.db.delete(imagen)
         self.db.commit()

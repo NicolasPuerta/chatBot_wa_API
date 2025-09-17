@@ -149,3 +149,7 @@ pyrightconfig.json
 *tmpfiles
 
 /data
+tests/
+test/
+*test
+test.py

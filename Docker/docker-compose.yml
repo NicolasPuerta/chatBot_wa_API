@@ -1,5 +1,3 @@
-version: '3.8'
-
 services:
   chatbot:
     build:
@@ -9,10 +7,12 @@ services:
     ports:
       - "5000:5000"
     env_file:
-      - ../env/.env
+      - ../.env
     volumes:
       - ../logs:/app/logs
       - ../uploads:/app/uploads  # <--- aquí se guardarán las imágenes
+      - ../:/app  # Monta el proyecto completo dentro del contenedor
+
     depends_on:
       - postgres
 

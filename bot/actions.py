@@ -1,4 +1,5 @@
 # --------------- Libraries ---------------
+from urllib import response
 from flask import jsonify
 import requests
 from requests.adapters import HTTPAdapter
@@ -6,6 +7,7 @@ from urllib3.util.retry import Retry
 import json
 import os
 import sys
+from uuid import uuid4
 
 
 CURRENT_PATH = '/'.join(os.path.abspath(__file__).replace('', '/').split('/')[:-1])
@@ -44,6 +46,7 @@ class ControllerBot:
         }
         try:
             requests.post(self.url, headers=headers, data=payload)
+            return f"✅ Mensaje Enviado a {self.to} - enviar_botones"
         except Exception as e:
             msg = f"Error en la solicitud: {e}"
             return msg
@@ -80,11 +83,24 @@ class ControllerBot:
         }
         try:
             requests.post(self.url, headers=headers, data=payload)
+            return f"✅ Mensaje Enviado a {self.to} - enviar_botones"
         except Exception as e:
             msg = f"Error en la solicitud: {e}"
             return msg
 
     def enviar_lista(self, message):
+        options = message.get("Productos", [])
+
+        if not options:
+            msg = "No se encontraron productos para enviar."
+            return msg
+        if not isinstance(options, list):
+            msg = "Los productos deben ser una lista."
+            return msg
+        # Limita el total a 10 filas
+        options = options[:10]
+
+        text = message.get("Text", " ")
         payload = json.dumps({
             "messaging_product": "whatsapp",
             "to": self.to,
@@ -92,32 +108,17 @@ class ControllerBot:
             "interactive": {
                 "type": "list",
                 "body": {
-                    "text": "Aquí tienes nuestro catálogo de productos:"
-                },
-                "footer": {
-                    "text": "Selecciona un producto para más detalles"
+                    "text": text
                 },
                 "action": {
-                    "button": "Ver productos",
-                    "sections":
-                    [
+                    "button": "Ver opciones",
+                    "sections": [
                         {
-                            "title": "Productos destacados",
-                            "rows":
-                            [
-                                {"id": f"prod_{i+1:03}", "title": f"Producto {i+1}", "description": desc} for i, desc in enumerate(message)
-                            ] [
-                                {
-                                    "id": "prod_001",
-                                    "title": "Destornillador",
-                                    "description": "Destornillador de estrella, $10.000"
-                                },
-                                {
-                                    "id": "prod_002",
-                                    "title": "Martillo",
-                                    "description": "Martillo de acero reforzado, $25.000"
-                                }
-                            ]
+                        "title": "Productos disponibles",
+                        "rows": 
+                        [ 
+                            { "id" : f"producto_{i+1}", "title": "Lampara LED", "description": desc[:30]} for i, desc in enumerate(options)
+                        ]
                         }
                     ]
                 }
@@ -128,7 +129,37 @@ class ControllerBot:
             'Authorization': f'Bearer {self.config.TOKENWTHASAPP}',
         }
         try:
-            requests.post(self.url, headers=headers, data=payload)
+            response = requests.post(self.url, headers=headers, data=payload)
+            if not response.ok:
+                return f"❌ Error {response.status_code}: {response.text}"
+            return f"✅ Mensaje Enviado a {self.to} - enviar_lista"
         except Exception as e:
             msg = f"Error en la solicitud: {e}"
             return msg
+
+
+    def obtener_imagenes(self, meta_id):
+        meta_url = f"https://graph.facebook.com/v22.0/{meta_id}"
+        headers = {
+            'Authorization': f'Bearer {self.config.TOKENWTHASAPP}',
+        }
+        try:
+            response = requests.get(meta_url, headers=headers)
+            if response.status_code == 200:
+                data = response.json()["url"]
+                # Paso 2: Descargar archivo binario
+                response = requests.get(data, headers=headers, stream=True)
+                ext = ".jpg"  # o infiere desde Content-Type
+                nombre_archivo = f"{uuid4().hex}{ext}"
+                ruta = os.path.join("uploads", nombre_archivo)
+
+                with open(ruta, 'wb') as f:
+                    for chunk in response.iter_content(1024):
+                        f.write(chunk)
+
+                return ruta
+            else:
+                return f"❌ Error al obtener imágenes: {response.status_code} - {response.text}"
+        except Exception as e:
+            return f"Error al obtener imágenes: {e}"
+        pass

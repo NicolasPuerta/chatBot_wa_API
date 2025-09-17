@@ -1,30 +1,25 @@
-# -------------------- imports --------------------
+# database/models/Pedidos.py
 from sqlalchemy import Column, Integer, String, ForeignKey, Boolean
 from sqlalchemy.orm import relationship
-
 # -------------------- módulos --------------------
 import os
 import sys
 
-CURRENT_PATH = '/'.join(os.path.abspath(__file__).replace('', '/').split('/')[:-2])
+CURRENT_PATH = '/'.join(os.path.abspath(__file__).replace('\\', '/').split('/')[:-3])
 sys.path.append(CURRENT_PATH)
+from database.Base import Base
 
-from database.model import DatabaseConfig
-
-Base = DatabaseConfig().Base
-class Pedidos(Base):
+class Pedido(Base):
     __tablename__ = "pedidos"
 
     id = Column(Integer, primary_key=True, autoincrement=True)
     cliente_id = Column(Integer, ForeignKey("usuarios.id"))
-    fecha = Column(String, nullable=False)
-    cantidad = Column(Integer, nullable=False)
-    descripcion = Column(String, nullable=False)
-    total = Column(Integer, nullable=False)
-    pago = Column(Boolean, nullable=False)
+    fecha = Column(String, nullable=True)
+    cantidad = Column(Integer, nullable=True)
+    direccion = Column(String, nullable=True)
+    descripcion = Column(String, nullable=True)
+    total = Column(Integer, nullable=True)
+    pago = Column(Boolean, nullable=True)
 
     usuario = relationship("Usuario", back_populates="pedidos")
-    imagenes = relationship("Imagenes", back_populates="pedido", cascade="all, delete")
-
-    def __repr__(self):
-        return f"Pedido(id={self.id}, cliente_id={self.cliente_id}, fecha={self.fecha}, total={self.total}) - {self.descripcion}, cantidad={self.cantidad}, pago={self.pago})"
+    imagenes = relationship("Imagen", back_populates="pedido", cascade="all, delete")
