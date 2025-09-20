@@ -1,0 +1,36 @@
+{
+    "intents": [
+        {
+            "tag": "saludo",
+            "patterns": ["hola", "buenos días", "qué tal", "hey"],
+            "responses": ["¡Hola! ¿En qué puedo ayudarte? 😎", "¡Buenos días! ¿Qué necesitas? 😎"]
+        },
+        {
+            "tag": "compra",
+            "patterns": ["quiero comprar", "me interesa", "comprar", "deseo comprar", "me gustaría comprar"],
+            "responses": { "Text" : "¡Genial! ¿Qué producto te gustaría comprar? 🛒", "Productos": [
+                    "Lampara led personalizada 30*30 cm $60.000",
+                    "Lampara led personalizada 40*40 cm $70.000",
+                    "Lampara led personalizada 50*50 cm $90.000",
+                    "Lampara led pre-diseñadas 30*30 cm $50.000"
+                ]
+            }
+        },
+
+        {
+            "tag": "ayuda",
+            "patterns": ["Necesito ayuda", "Ayúdame", "Cuéntame más", "Dame información", "Quiero saber más"],
+            "responses": ["¿Ver catalogo de productos?", "¿Hablar con un asesor?", "¿como puedo usar las lamparas?"]
+        },
+        {
+            "tag": "despedida",
+            "patterns": ["Adiós", "Nos vemos", "Hasta luego"],
+            "responses": ["¡Hasta luego! 😢", "¡Cuídate mucho! 😊"]
+        },
+        {
+            "tag": "datos",
+            "patterns": ["confirmar datos", "revisar datos", "verificar información", "mostrar datos", "datos de la compra"],
+            "responses": ["Claro, aquí están los datos de que se necesita para tu compra: \n fecha \nNombre: \nTeléfono: \nDirección: \nCantidad: \n\n mandar en orden porfavor 😊"]
+        }
+    ]
+}

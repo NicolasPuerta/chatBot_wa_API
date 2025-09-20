@@ -15,5 +15,5 @@ def Create_folder(path : str):
 
 def logs_continue(msg: str, path_log_name: str):
     date = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-    with open(f"{path_log_name}", "a") as f:
+    with open(f"{path_log_name}", "a", encoding="utf-8") as f:
         f.write(f"{date} - {msg}\n")
