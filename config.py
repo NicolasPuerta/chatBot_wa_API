@@ -14,8 +14,8 @@ class Config:
     TESTING = False
 
     # PostgreSQL
-    POSTGRES_URL = "postgresql://postgres:prueba1@localhost:5432/chatbotdb"
-
+    CONTRASENA_SECRETA = os.getenv("CONTRASENA_SECRETA")
+    POSTGRES_URL = F"postgresql://postgres:{CONTRASENA_SECRETA}@localhost:5432/chatbotdb"
     # Seguridad
     SECRET_KEY = os.getenv("SECRET_KEY", "clave_por_defecto_insegura")
 
