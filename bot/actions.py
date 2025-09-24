@@ -52,9 +52,9 @@ class ControllerBot:
             return msg
 
     def enviar_botones(self, message):
-        options = message.get("Productos", [])
+        options = message.get("options", [])
         if not options:
-            msg = "No se encontraron productos para enviar."
+            msg = "No se encontraron options para enviar."
             return msg
         if not isinstance(options, list):
             msg = "Los productos deben ser una lista."
@@ -89,10 +89,10 @@ class ControllerBot:
             return msg
 
     def enviar_lista(self, message):
-        options = message.get("Productos", [])
+        options = message.get("options", [])
 
         if not options:
-            msg = "No se encontraron productos para enviar."
+            msg = "No se encontraron options para enviar."
             return msg
         if not isinstance(options, list):
             msg = "Los productos deben ser una lista."

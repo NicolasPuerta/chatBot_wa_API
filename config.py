@@ -25,3 +25,5 @@ class Config:
     TESTNUMBER = os.getenv("TESTNUMBER")
     PHONE_NUMBER_ID = os.getenv("PHONE_NUMBER_ID")
 
+    GEMINI_API_KEY = os.getenv("TOKEN_GEMINI")
+

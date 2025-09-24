@@ -11,9 +11,71 @@ from bot.actions import ControllerBot
 from database.actions import Database
 from database.models.Usuarios import Usuario
 from database.models.Pedidos import Pedido
+
+from data.actions import ControllerGemini
+from data.intent import haggle_intents
+
+
 # === Cargar datos ===
 with open(f"{CURRENT_PATH}/data/intents.json", encoding="utf-8") as f:
     intents = json.load(f)
+
+class MainBot:
+    def __init__(self, to):
+        self.bot = ControllerBot(to)
+        self.database = Database()
+        self.gemini = ControllerGemini()
+    
+    def response_process(self, message):
+        """
+        Procesa el mensaje recibido y devuelve una respuesta generada por Gemini.
+        """
+        response = self.gemini.generate_response(message)
+        if not response:
+            return "Error al generar la respuesta con Gemini."
+
+        if response["intent"] == "error":
+            return response["response"]
+        
+        if response["intent"] == "Saludo":
+            usuario_ = self.database.obtener_usuario(self.bot.to)
+            if not usuario_:
+                usuario = Usuario(telefono=self.bot.to, estado="Estado_inicial")
+                new_usuario = self.database.insertar_usuario(usuario)
+                if not new_usuario:
+                    return "Error al insertar el usuario en la base de datos."
+            proceso = self.main_process_message(response["response"])
+            if 'Mensaje Enviado a' not in proceso or "error" in proceso:
+                return {"error": f"Error al enviar el mensaje: {message}", "message": proceso, "intento": "saludo"}
+            return proceso
+        
+        if response["intent"] == "ordenar_compra":
+            proceso = self.main_process_send_buttons(response["response"])
+            if 'Mensaje Enviado a' not in proceso or "error" in proceso:
+                return {"error": f"Error al enviar el mensaje: {message}", "message": proceso, "intento": "compra"}
+            return proceso
+
+        if response["intent"] == "pedido_datos":
+            ## guardar datos de pedido, cambiar estado, guardar imagen si llega
+            pass
+
+    def main_process_message(self, mensaje):
+        msg = self.bot.texto_simple(mensaje)
+        return msg
+
+    def main_process_send_buttons(self, mensaje):
+        """
+        Envía un mensaje con botones interactivos al usuario.
+        """
+        msg = self.bot.enviar_botones(mensaje)
+        return msg
+    
+    def main_process_send_list(self, mensaje):
+        """
+        Envía un mensaje con una lista de productos al usuario.
+        """
+        msg = self.bot.enviar_lista(mensaje)
+        return msg
 
 class RankedResponse:
     def __init__(self, to, intents_list = intents):
