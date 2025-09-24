@@ -20,6 +20,8 @@ class Pedido(Base):
     descripcion = Column(String, nullable=True)
     total = Column(Integer, nullable=True)
     pago = Column(Boolean, nullable=True)
+    tipo = Column(String, nullable=True)
+    estado = Column(String, nullable=True)
 
     usuario = relationship("Usuario", back_populates="pedidos")
     imagenes = relationship("Imagen", back_populates="pedido", cascade="all, delete")

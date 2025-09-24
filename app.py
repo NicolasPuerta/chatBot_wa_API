@@ -13,7 +13,7 @@ from flask_socketio import SocketIO
 from database.models.Usuarios import Usuario
 from logs.create_folder import Create_folder, logs_continue
 from bot.actions import ControllerBot
-from bot.main import RankedResponse
+from bot.main import RankedResponse, MainBot
 from database.init_db import init_db
 from database.actions import Database
 
@@ -80,13 +80,26 @@ def receive_message():
 
                     logs_continue_app(f"Mensaje de texto recibido de {sender}: {text}")
 
-                    bot = RankedResponse(sender)
-                    response = bot.Classify(text)
+                    bot = MainBot(sender)
+                    response = bot.response_process(text)
 
                     logger.info(f"Mensaje de {sender}: {text}")
                     logger.info(f"Respuesta enviada: {response}")
                     logs_continue_app(f"{sender}: {text}")
                     logs_continue_app(f"Respuesta: {response}")
+
+                if msg.get("type") == "interactive":
+                    selection = msg["interactive"]["list_reply"]["description"]
+                    sender = msg["from"]
+                    logs_continue_app(f"Mensaje de texto recibido de {sender}: {selection}")
+
+                    bot = MainBot(sender)
+                    response = bot.response_process(selection)
+                    logger.info(f"Mensaje de {sender}: {selection}")
+                    logger.info(f"Respuesta enviada: {response}")
+                    logs_continue_app(f"{sender}: {selection}")
+                    logs_continue_app(f"Respuesta: {response}")
+
 
         # Siempre responder 200 para que WhatsApp no reintente
         return "EVENT_RECEIVED", 200

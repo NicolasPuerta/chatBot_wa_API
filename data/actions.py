@@ -4,11 +4,11 @@ import re
 import sys
 from urllib import response
 import google.generativeai as genai
-from intent import haggle_intents
 
 CURRENT_PATH = '/'.join(os.path.abspath(__file__).replace('\\', '/').split('/')[:-2])
 sys.path.append(CURRENT_PATH)
 # --------------- Modules ---------------
+from data.intent import haggle_intents
 from config import Config   
 print(Config.GEMINI_API_KEY)
 class ControllerGemini():
@@ -20,7 +20,7 @@ class ControllerGemini():
     def generate_response(self, message):
 
         prompt = f"""
-            Actúa como un asistente de una emppresa de lamppara LED, llamada iluminaria Store. El usuario dice: "{message}".
+            Actúa como un asistente de una empresa de lamparas LED, llamada iluminaria Store. El usuario dice: "{message}".
             productos: Lampara led personalizada 18*24 cm $60.000, Lampara led personalizada 24*28 cm $70.000
             Devuelve SOLO JSON, sin texto adicional, con la siguiente estructura:
             {{

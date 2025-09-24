@@ -22,12 +22,12 @@ def haggle_intents(
         datos = {
             "intent": "pedido_datos",
             "response" : "Perfecto, por favor proporciona los siguientes datos para completar tu pedido:\n\n"
-                            "1. Nombre completo\n"
-                            "2. Dirección de entrega\n"
-                            "3. Especificación (algo que quiere que vaya en la lámpara)\n"
-                            "4. Imagen (opcional)\n"
-                            "5. Cedula (Solo si es por interrapidisimo)\n"
-                            "6. Método de pago (efectivo, tarjeta, etc.)\n\n"
+                            "1. Nombre completo:\n"
+                            "2. Dirección de entrega:\n"
+                            "3. Especificación (algo que quiere que vaya en la lámpara):\n"
+                            "4. Imagen (opcional):\n"
+                            "5. Cedula (Solo si es por interrapidisimo):\n"
+                            "6. Método de pago (efectivo, transferencia, etc.)\n\n"
                             "¡Gracias! 😊" 
                 }
         return datos
