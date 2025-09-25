@@ -4,7 +4,7 @@ def haggle_intents(
 ):
     # mirar si si es necesario validar un pedido repitiendo la info
     if intents.lower() == "Saludo".lower():
-        return message
+        return {"intent": "saludo","response": message}
     
     if intents.lower() == "ordenar_compra".lower():
         productos = { 
@@ -44,7 +44,7 @@ def haggle_intents(
         return confirmacion
     
     if intents.lower() == "fallback".lower():
-        return message
+        return {"intent": "fallback","response": message}
     
     if intents.lower() == "error".lower():
-        return message
+        return {"intent": "error","response": message}

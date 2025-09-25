@@ -45,8 +45,7 @@ class MainBot:
             if 'Mensaje Enviado a' not in proceso or "error" in proceso:
                 return {"error": f"Error al enviar el mensaje: {message}", "message": proceso, "intento": "saludo"}
             return proceso
-        
-        if response["intent"] == "Saludo":
+        if response["intent"] == "saludo":
             usuario_ = self.database.obtener_usuario(self.bot.to)
             if not usuario_:
                 usuario = Usuario(telefono=self.bot.to, estado="ordenar_compra")
@@ -75,7 +74,7 @@ class MainBot:
             usuario_ = self.database.obtener_usuario(self.bot.to)
             if usuario_:
                 usuario_.estado = "estado_datos_pedido"
-                Pedido_ = Pedido(cliente_id=usuario_.id, estado="pendiente", detalles="Esperando datos del cliente", tipo=f"{message}")
+                Pedido_ = Pedido(cliente_id=usuario_.id, estado="pendiente", descripcion="Esperando datos del cliente", tipo=f"{message}")
                 nuevo_pedido = self.database.insertar_pedido(Pedido_)
                 ## enviar mensaje de confirmación de pedido
                 if not nuevo_pedido:
@@ -84,6 +83,7 @@ class MainBot:
                 if not usuario_actualizado:
                     return {"error": "Error al actualizar el usuario en la base de datos."}
             proceso = self.main_process_send_list(response)  
+            return proceso
         
         # if response["intent"] == "confirmar_pedido":
         #     usuario_ = self.database.obtener_usuario(self.bot.to)

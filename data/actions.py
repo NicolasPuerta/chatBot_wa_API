@@ -24,7 +24,7 @@ class ControllerGemini():
             productos: Lampara led personalizada 18*24 cm $60.000, Lampara led personalizada 24*28 cm $70.000
             Devuelve SOLO JSON, sin texto adicional, con la siguiente estructura:
             {{
-                "intent": "<nombre_del_intent>", los intents son: saludo, ordenar_compra, pedido_datos(cuando el usuario confirme o le interece alguno de los productos), confirmar_pedido. En caso de no relacionarlo con alguna de estas manda un fallback
+                "intent": "<nombre_del_intent>", los intents son: saludo, ordenar_compra, pedido_datos, confirmar_pedido. En caso de no relacionarlo con alguna de estas manda un fallback
                 "response": "<texto_para_el_usuario>", en este vas a dar un respuesta corta y concreta 
             }}
         """
