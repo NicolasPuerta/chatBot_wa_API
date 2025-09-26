@@ -10,24 +10,28 @@ sys.path.append(CURRENT_PATH)
 # --------------- Modules ---------------
 from data.intent import haggle_intents
 from config import Config   
-from database.actions import ActionsDB
+from database.actions import Database
 
 
 class ControllerGemini():
     def __init__(self):
         self.config = Config()
         genai.configure(api_key=self.config.GEMINI_API_KEY)
-        self.model = genai.GenerativeModel("gemini-1.5-flash")
-        self.user = ActionsDB()
+        self.model = genai.GenerativeModel("gemini-2.0-flash")
+        self.user = Database()
+        self.json_devuelta = {
+                "intent": "<nombre_del_intent>", 
+                "response": "<texto_para_el_usuario>"
+            }
         self.intents = {"saludo" : "Un saludo amigable y que refleje lo que es la empresa, siempre saludar cuando un usuario inicia una conversacion o te pase un NONE en estado",
                         "ordenar_compra" : "Este mensaje generalmente se activa cuando el estado del usuario esta en 'saludo'. El bot reesponde con una lista de productos y pregunta cual le interesa", 
-                        "pedido_datos" : "Cuando el usuario ha seleccionado un producto o ha confirmado que quiere hacer un pedido, el bot solicita los datos necesarios para completar el pedido, los cuales son los siguientres: Nombre completo, Dirección de entrega, Especificación (algo que quiere que vaya en la lámpara), Imagen (opcional). Este intent es diferente ya que lo vas a clasificar de la siguiente forma y con ese orden 'pedido_orden_Nombre', 'pedido_orden_Direccion', 'pedido_orden_Especificacion', 'pedido_orden_Imagen'.", 
+                        "pedido_datos" : "Cuando el usuario ha seleccionado un producto o ha confirmado que quiere hacer un pedido, el bot solicita los datos necesarios para completar el pedido, los cuales son los siguientres: Nombre completo, Dirección de entrega, Especificación (algo que quiere que vaya en la lámpara), Imagen (opcional). Este intent es diferente ya que lo vas a clasificar de la siguiente forma y con ese orden 'pedido_datos' (aca pide el nombre), 'pedido_datos_Nombre' (aca la dirección), 'pedido_datos_Direccion' (aca la especificación), 'pedido_datos_Especificacion' (aca la imagen), 'pedido_datos_Imagen' (confirma que se tienen los datos). Necesito que me pases alguno de los 'pedido_datos' anteriores y que pidas el dato correspondiente. Si el usuario ya ha proporcionado todos los datos, debes cambiar su estado a 'confirmar_pedido' y pedirle que confirme su pedido.", 
                         "confirmar_pedido" : "siempre va despues de que pedido_datos, el bot resume la informacion del pedido y pregunta si desea confirmar y finalizar la compra, proporcionando opciones claras para confirmar o cancelar el pedido. En caso de cancelar devolver un agradecimiento y poner en estado fallback o saludo", 
                         "fallback" : "Siempre que se solicite información de la empresa o no puedas relacionarlo con alguno de los intents", 
                         "error" : "Genuinamente no entendiste el mensaje del usuario y o consideras que el usuario esta respondiendo algo fuera de contexto, responde con un mensaje de error pidiendo que reformule su pregunta o mensaje"}
         
     def generate_response(self, message, to):
-        Usuario_texting = self.user.get_user_by_id(to)
+        Usuario_texting = self.user.obtener_usuario(to)
         usuario_estado = Usuario_texting.estado if Usuario_texting else None
         usuario_respuesta_bot = Usuario_texting.respuesta_bot if Usuario_texting else None
         prompt = f"""
@@ -35,13 +39,10 @@ class ControllerGemini():
             El usuario dice: "{message}".
             El estado actual del usuario es: "{usuario_estado}".
             La última respuesta del bot fue: "{usuario_respuesta_bot}".
-            Tus posibles estados son las llaves y sus condiciones son los valores: {list(self.intents)}
+            Tus posibles estados son las llaves y sus condiciones son los valores: {self.intents}. Nota: Puedes volver a todos los intents exceptuando que estado contenga pedido_datos, el cual es secuencial. y solo puedes pasar a confirmar_pedido si ya tienes todos los datos del pedido. si el usuario escribe algo relacionado con cancelar, envia un fallback agradeciendo y ofreciendo ayuda futura.
             productos: Lampara led personalizada 18*24 cm $60.000, Lampara led personalizada 24*28 cm $70.000. Cada producto viene con control rgb, osea cambia de color y tiene diferentes modos de iluminacion, no lleva pilas, pero si su debido adaptador y base.
             Devuelve SOLO JSON, sin texto adicional, con la siguiente estructura:
-            {{
-                "intent": "<nombre_del_intent>", los intents son: saludo, ordenar_compra, pedido_datos, confirmar_pedido. En caso de no relacionarlo con alguna de estas manda un fallback
-                "response": "<texto_para_el_usuario>", en este vas a dar un respuesta corta y concreta 
-            }}
+            {self.json_devuelta}
         """
         try:
             response = self.model.generate_content(prompt)
@@ -61,6 +62,6 @@ class ControllerGemini():
         
 if __name__ == "__main__":
     controller = ControllerGemini()
-    test_message = "me gusta esta lampara, Lampara led personalizada 18*24 cm $60.000"
-    response = controller.generate_response(test_message)
+    test_message = "que productos tienes"
+    response = controller.generate_response(test_message, "209345678901")
     print(response)

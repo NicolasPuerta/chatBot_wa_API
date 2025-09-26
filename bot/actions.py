@@ -10,7 +10,7 @@ import sys
 from uuid import uuid4
 
 
-CURRENT_PATH = '/'.join(os.path.abspath(__file__).replace('', '/').split('/')[:-1])
+CURRENT_PATH = '/'.join(os.path.abspath(__file__).replace('\\', '/').split('/')[:-2])
 sys.path.append(CURRENT_PATH)
 # --------------- Modules ---------------
 from config import Config   
@@ -46,7 +46,7 @@ class ControllerBot:
         }
         try:
             requests.post(self.url, headers=headers, data=payload)
-            return f"✅ Mensaje Enviado a {self.to} - enviar_botones"
+            return f"Mensaje Enviado a {self.to} - enviar_botones"
         except Exception as e:
             msg = f"Error en la solicitud: {e}"
             return msg
@@ -100,7 +100,7 @@ class ControllerBot:
         # Limita el total a 10 filas
         options = options[:10]
 
-        text = message.get("Text", " ")
+        text = message.get("response", "Elige un producto de la lista 👇")
         payload = json.dumps({
             "messaging_product": "whatsapp",
             "to": self.to,
@@ -117,7 +117,7 @@ class ControllerBot:
                         "title": "Productos disponibles",
                         "rows": 
                         [ 
-                            { "id" : f"producto_{i+1}", "title": "Lampara LED", "description": desc[:30]} for i, desc in enumerate(options)
+                            { "id" : f"producto_{i+1}", "title": "Lampara LED", "description": desc[:72]} for i, desc in enumerate(options)
                         ]
                         }
                     ]
@@ -130,36 +130,67 @@ class ControllerBot:
         }
         try:
             response = requests.post(self.url, headers=headers, data=payload)
-            if not response.ok:
-                return f"❌ Error {response.status_code}: {response.text}"
-            return f"✅ Mensaje Enviado a {self.to} - enviar_lista"
+            print(response)
+            # if not response.ok:
+            #     return f"Error {response.status_code}: {response.text}"
+            return f"Mensaje Enviado a {self.to} - enviar_lista"
         except Exception as e:
             msg = f"Error en la solicitud: {e}"
             return msg
 
 
     def obtener_imagenes(self, meta_id):
-        meta_url = f"https://graph.facebook.com/v22.0/{meta_id}"
+        meta_url = f"https://graph.facebook.com/v22.0/{meta_id}?fields=url"
         headers = {
             'Authorization': f'Bearer {self.config.TOKENWTHASAPP}',
         }
+
         try:
-            response = requests.get(meta_url, headers=headers)
-            if response.status_code == 200:
-                data = response.json()["url"]
-                # Paso 2: Descargar archivo binario
-                response = requests.get(data, headers=headers, stream=True)
-                ext = ".jpg"  # o infiere desde Content-Type
-                nombre_archivo = f"{uuid4().hex}{ext}"
-                ruta = os.path.join("uploads", nombre_archivo)
+            # Paso 1: Obtener metadata con la URL
+            meta_resp = requests.get(meta_url, headers=headers)
+            meta_resp.raise_for_status()
 
-                with open(ruta, 'wb') as f:
-                    for chunk in response.iter_content(1024):
-                        f.write(chunk)
+            data = meta_resp.json()
+            file_url = data.get("url")
+            if not file_url:
+                return {"success": False, "error": "No se encontró la URL de la imagen."}
 
-                return ruta
+            # Paso 2: Descargar archivo binario
+            img_resp = requests.get(file_url, headers=headers, stream=True)
+            img_resp.raise_for_status()
+
+            # Inferir extensión
+            content_type = img_resp.headers.get("Content-Type", "")
+            if "png" in content_type:
+                ext = ".png"
+            elif "jpeg" in content_type:
+                ext = ".jpg"
+            elif "gif" in content_type:
+                ext = ".gif"
             else:
-                return f"❌ Error al obtener imágenes: {response.status_code} - {response.text}"
+                ext = ".bin"
+
+            os.makedirs("uploads", exist_ok=True)
+            nombre_archivo = f"{uuid4().hex}{ext}"
+            ruta = os.path.join("uploads", nombre_archivo)
+
+            with open(ruta, "wb") as f:
+                for chunk in img_resp.iter_content(1024):
+                    f.write(chunk)
+
+            return {"success": True, "path": ruta}
+
         except Exception as e:
-            return f"Error al obtener imágenes: {e}"
-        pass
+            return {"success": False, "error": str(e)}
+
+if __name__ == "__main__":
+    bot = ControllerBot("573014253106")
+    # bot.enviar_botones({"options": ["Opción 1", "Opción 2", "Opción 3"], "Texto": "Elige una opción:"})
+    bot.enviar_lista({ 
+            "intent": "ordenar_compra",
+            "response" : "¡Genial! ¿Qué producto te gustaría comprar? 🛒. Una vez que elijas un producto, te empezaré a pedir los datos necesarios para el envío.", 
+            "options": [
+                    "Lampara led personalizada 18*24 cm $60.000",
+                    "Lampara led personalizada 24*28 cm $70.000",
+                ]
+            })

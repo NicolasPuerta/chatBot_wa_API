@@ -98,6 +98,19 @@ def receive_message():
                     logger.info(f"Mensaje de {sender}: {selection}")
                     logger.info(f"Respuesta enviada: {response}")
                     logs_continue_app(f"{sender}: {selection}")
+                    logs_continue_app(f"Respuesta interactiva: {response}")
+
+                if msg.get("type") == "image":
+                    id_image = msg["image"]["id"]
+                    caption = msg["image"]["caption"]
+                    sender = msg["from"]
+                    logs_continue_app(f"Mensaje de imagen recibido de {sender}: {caption} - ID: {id_image}")
+
+                    bot = MainBot(sender)
+                    response = bot.response_process(caption, id_imagen=id_image)
+                    logger.info(f"Mensaje de {sender}: {caption} - ID: {id_image}")
+                    logger.info(f"Respuesta enviada: {response}")
+                    logs_continue_app(f"{sender}: {caption} - ID: {id_image}")
                     logs_continue_app(f"Respuesta: {response}")
 
 

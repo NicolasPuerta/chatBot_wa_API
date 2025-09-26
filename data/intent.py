@@ -9,7 +9,7 @@ def haggle_intents(
     if intents.lower() == "ordenar_compra".lower():
         productos = { 
             "intent": "ordenar_compra",
-            "response" : "¡Genial! ¿Qué producto te gustaría comprar? 🛒\nUna vez que elijas un producto, te empezaré a pedir los datos necesarios para el envío.", 
+            "response" : "¡Genial! ¿Qué producto te gustaría comprar? 🛒. Una vez que elijas un producto, te empezaré a pedir los datos necesarios para el envío.", 
             "options": [
                     "Lampara led personalizada 18*24 cm $60.000",
                     "Lampara led personalizada 24*28 cm $70.000",
@@ -17,10 +17,10 @@ def haggle_intents(
             }
         
         return productos
-
+    print()
     if "pedido_datos".lower() in intents.lower():
         datos = {
-            "intent": "pedido_datos",
+            "intent": intents,
             "response" : message
                 }
         return datos
