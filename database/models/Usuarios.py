@@ -17,5 +17,6 @@ class Usuario(Base):
     estado = Column(String, nullable=True)
     cedula = Column(String, nullable=True)
     telefono = Column(String, nullable=True)
+    respuesta_bot = Column(String, nullable=True)
 
     pedidos = relationship("Pedido", back_populates="usuario", cascade="all, delete")
