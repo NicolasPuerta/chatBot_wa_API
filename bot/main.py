@@ -34,13 +34,21 @@ class MainBot:
         if not response:
             return "Error al generar la respuesta con Gemini."
 
-        if response["intent"] == "error":
-            return response["response"]
+        if response['intent'] == 'fallback':
+            proceso = self.main_process_message(response["response"])
+            if 'Mensaje Enviado a' not in proceso or "error" in proceso:
+                return {"error": f"Error al enviar el mensaje: {message}", "message": proceso, "intento": "saludo"}
+            return proceso
         
-        if response["intent"] == "Saludo":
+        if response["intent"] == "error":
+            proceso = self.main_process_message(response["response"])
+            if 'Mensaje Enviado a' not in proceso or "error" in proceso:
+                return {"error": f"Error al enviar el mensaje: {message}", "message": proceso, "intento": "saludo"}
+            return proceso
+        if response["intent"] == "saludo":
             usuario_ = self.database.obtener_usuario(self.bot.to)
             if not usuario_:
-                usuario = Usuario(telefono=self.bot.to, estado="Estado_inicial")
+                usuario = Usuario(telefono=self.bot.to, estado="ordenar_compra")
                 new_usuario = self.database.insertar_usuario(usuario)
                 if not new_usuario:
                     return "Error al insertar el usuario en la base de datos."
@@ -50,15 +58,53 @@ class MainBot:
             return proceso
         
         if response["intent"] == "ordenar_compra":
-            proceso = self.main_process_send_buttons(response["response"])
+            usuario_ = self.database.obtener_usuario(self.bot.to)
+            if usuario_:
+                usuario_.estado = "pedido_datos"
+                usuario_actualizado = self.database.actualizar_usuario(usuario_)
+                if not usuario_actualizado:
+                    return {"error": "Error al actualizar el usuario en la base de datos."}
+            proceso = self.main_process_send_list(response)
             if 'Mensaje Enviado a' not in proceso or "error" in proceso:
                 return {"error": f"Error al enviar el mensaje: {message}", "message": proceso, "intento": "compra"}
             return proceso
 
         if response["intent"] == "pedido_datos":
             ## guardar datos de pedido, cambiar estado, guardar imagen si llega
-            pass
+            usuario_ = self.database.obtener_usuario(self.bot.to)
+            if usuario_:
+                usuario_.estado = "estado_datos_pedido"
+                Pedido_ = Pedido(cliente_id=usuario_.id, estado="pendiente", descripcion="Esperando datos del cliente", tipo=f"{message}")
+                nuevo_pedido = self.database.insertar_pedido(Pedido_)
+                ## enviar mensaje de confirmación de pedido
+                if not nuevo_pedido:
+                    return {"error": "Error al insertar el pedido en la base de datos."}
+                usuario_actualizado = self.database.actualizar_usuario(usuario_)
+                if not usuario_actualizado:
+                    return {"error": "Error al actualizar el usuario en la base de datos."}
+            proceso = self.main_process_send_list(response)  
+            return proceso
+        
+        # if response["intent"] == "confirmar_pedido":
+        #     usuario_ = self.database.obtener_usuario(self.bot.to)
+        #     Pedido_ = self.database.obtener_ultimo_pedido(usuario_.id)
+        #     if Pedido_:
+        #         Pedido_.detalles = message
+        #         Pedido_.estado = "confirmado"
+        #         pedido_actualizado = self.database.actualizar_pedido(Pedido_)
+        #         if not pedido_actualizado:
+        #             return {"error": "Error al actualizar el pedido en la base de datos."}
+        #     if usuario_:
+        #         usuario_.estado = "estado_confirmar_pedido"
+        #         usuario_actualizado = self.database.actualizar_usuario(usuario_)
 
+        #         if not usuario_actualizado:
+        #             return {"error": "Error al actualizar el usuario en la base de datos."}
+        #     proceso = self.main_process_send_buttons(response)
+        #     if 'Mensaje Enviado a' not in proceso or "error" in proceso:
+        #         return {"error": f"Error al enviar el mensaje: {message}", "message": proceso, "intento": "pedido"}
+        #     return proceso
+        
     def main_process_message(self, mensaje):
         msg = self.bot.texto_simple(mensaje)
         return msg

@@ -58,6 +58,9 @@ class Database:
     def obtener_imagenes(self):
         return self.db.query(Imagen).all()
 
+    def obtener_ultimo_pedido(self, cliente_id: int):
+        return self.db.query(Pedido).filter(Pedido.cliente_id == cliente_id).order_by(Pedido.id.desc()).first()
+
     # -------------------- Updates --------------------
 
     def actualizar_usuario(self, usuario: Usuario):
