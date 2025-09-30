@@ -23,27 +23,57 @@ class ControllerGemini():
                 "intent": "<nombre_del_intent>", 
                 "response": "<texto_para_el_usuario>"
             }
-        self.intents = {"saludo" : "Un saludo amigable y que refleje lo que es la empresa, siempre saludar cuando un usuario inicia una conversacion o te pase un NONE en estado",
-                        "ordenar_compra" : "Este mensaje generalmente se activa cuando el estado del usuario esta en 'saludo'. El bot reesponde con una lista de productos y pregunta cual le interesa", 
-                        "pedido_datos" : "Cuando el usuario ha seleccionado un producto o ha confirmado que quiere hacer un pedido, el bot solicita los datos necesarios para completar el pedido, los cuales son los siguientres: Nombre completo, Dirección de entrega, Especificación (algo que quiere que vaya en la lámpara), Imagen (opcional). Este intent es diferente ya que lo vas a clasificar de la siguiente forma y con ese orden 'pedido_datos' (aca pide el nombre), 'pedido_datos_Nombre' (aca la dirección), 'pedido_datos_Direccion' (aca la especificación), 'pedido_datos_Especificacion' (aca la imagen), 'pedido_datos_Imagen' (confirma que se tienen los datos). Necesito que me pases alguno de los 'pedido_datos' anteriores y que pidas el dato correspondiente. Si el usuario ya ha proporcionado todos los datos, debes cambiar su estado a 'confirmar_pedido' y pedirle que confirme su pedido.", 
-                        "confirmar_pedido" : "siempre va despues de que pedido_datos, el bot resume la informacion del pedido y pregunta si desea confirmar y finalizar la compra, proporcionando opciones claras para confirmar o cancelar el pedido. En caso de cancelar devolver un agradecimiento y poner en estado fallback o saludo", 
-                        "fallback" : "Siempre que se solicite información de la empresa o no puedas relacionarlo con alguno de los intents", 
-                        "error" : "Genuinamente no entendiste el mensaje del usuario y o consideras que el usuario esta respondiendo algo fuera de contexto, responde con un mensaje de error pidiendo que reformule su pregunta o mensaje"}
+        self.intents = {
+                "saludo": "Un saludo amigable que refleje la identidad de la empresa. Siempre se usa cuando un usuario inicia una conversación o el estado actual es None.",
+                
+                "ordenar_compra": "Se activa después de 'saludo'. El bot responde con una lista de productos y pregunta cuál le interesa al usuario.", 
+                
+                "pedido_datos": "Se activa cuando el usuario confirma que quiere hacer un pedido. El flujo es secuencial y debe pedirse en este orden: \
+                    1) pedido_datos (pide el nombre del cliente), \
+                    2) pedido_datos_Nombre (pide la dirección de entrega), \
+                    3) pedido_datos_Direccion (pide la especificación de la lámpara), \
+                    4) pedido_datos_Especificacion (pide la imagen opcional), \
+                    5) pedido_datos_Imagen (guarda la imagen y calcula la fecha de entrega). \
+                    Una vez completado, se cambia el estado automáticamente a 'confirmar_pedido'.",
+                
+                "confirmar_pedido": "Se activa cuando ya se tienen todos los datos del pedido. El bot debe resumir la información del pedido y preguntar si desea confirmar o cancelar. Si el usuario cancela, agradecer y volver a 'fallback' o 'saludo'.",
+                
+                "fallback": "Responde cuando el usuario pide información general de la empresa o el mensaje no encaja en ningún intent válido.",
+                
+                "error": "Se usa cuando el mensaje del usuario no tiene sentido en el contexto o está fuera de lugar. El bot debe pedir que reformule la pregunta."
+            }
+
         
     def generate_response(self, message, to):
         Usuario_texting = self.user.obtener_usuario(to)
         usuario_estado = Usuario_texting.estado if Usuario_texting else None
         usuario_respuesta_bot = Usuario_texting.respuesta_bot if Usuario_texting else None
         prompt = f"""
-            Eres un asistente conversacional para una tienda de lámparas LED personalizadas llamada Iluminaria Store. Tu tarea es ayudar a los usuarios a través de una serie de pasos para completar sus pedidos de manera eficiente y amigable.
-            El usuario dice: "{message}".
-            El estado actual del usuario es: "{usuario_estado}".
-            La última respuesta del bot fue: "{usuario_respuesta_bot}".
-            Tus posibles estados son las llaves y sus condiciones son los valores: {self.intents}. Nota: Puedes volver a todos los intents exceptuando que estado contenga pedido_datos, el cual es secuencial. y solo puedes pasar a confirmar_pedido si ya tienes todos los datos del pedido. si el usuario escribe algo relacionado con cancelar, envia un fallback agradeciendo y ofreciendo ayuda futura.
-            productos: Lampara led personalizada 18*24 cm $60.000, Lampara led personalizada 24*28 cm $70.000. Cada producto viene con control rgb, osea cambia de color y tiene diferentes modos de iluminacion, no lleva pilas, pero si su debido adaptador y base.
-            Devuelve SOLO JSON, sin texto adicional, con la siguiente estructura:
-            {self.json_devuelta}
-        """
+                Eres un asistente conversacional para una tienda de lámparas LED personalizadas llamada Iluminaria Store. 
+                Tu tarea es guiar al usuario paso a paso hasta completar un pedido de forma clara y amigable.
+
+                El usuario dice: "{message}".
+                El estado actual del usuario es: "{usuario_estado}".
+                La última respuesta del bot fue: "{usuario_respuesta_bot}".
+
+                Los posibles estados (intents) son: {self.intents}.
+                Reglas importantes:
+                - El intent 'pedido_datos' es SECUENCIAL. No puedes saltar pasos ni cambiar el orden.
+                - El flujo de 'pedido_datos' es: pedido_datos → pedido_datos_Nombre → pedido_datos_Direccion → pedido_datos_Especificacion → pedido_datos_Imagen.
+                - Una vez llegues a 'pedido_datos_Imagen', cambia automáticamente el estado a 'confirmar_pedido'.
+                - Solo puedes pasar a 'confirmar_pedido' si ya tienes TODOS los datos.
+                - Si el usuario escribe algo relacionado con cancelar, responde con un fallback agradeciendo y ofreciendo ayuda futura.
+                - Para 'saludo', siempre responder con un mensaje cálido que refleje la identidad de la empresa.
+                - Para 'ordenar_compra', muestra los productos disponibles.
+                - Productos disponibles: 
+                - Lámpara LED personalizada 18*24 cm → $60.000
+                - Lámpara LED personalizada 24*28 cm → $70.000
+                (Ambas incluyen control RGB con modos de iluminación, adaptador y base. No incluyen pilas).
+
+                Debes responder **solo en formato JSON** con la siguiente estructura:
+                {self.json_devuelta}
+            """
+
         try:
             response = self.model.generate_content(prompt)
             try:

@@ -13,7 +13,7 @@ from flask_socketio import SocketIO
 from database.models.Usuarios import Usuario
 from logs.create_folder import Create_folder, logs_continue
 from bot.actions import ControllerBot
-from bot.main import RankedResponse, MainBot
+from bot.main import MainBot
 from database.init_db import init_db
 from database.actions import Database
 
@@ -102,7 +102,7 @@ def receive_message():
 
                 if msg.get("type") == "image":
                     id_image = msg["image"]["id"]
-                    caption = msg["image"]["caption"]
+                    caption = msg["image"]["caption"] if "caption" in msg["image"] else ""
                     sender = msg["from"]
                     logs_continue_app(f"Mensaje de imagen recibido de {sender}: {caption} - ID: {id_image}")
 
@@ -120,94 +120,6 @@ def receive_message():
     except Exception as e:
         logs_continue_app(f"Error en receive_message: {e}")
         return "ERROR", 500
-
-
-# @app.route('/webhook', methods=['POST'])
-# def receive_message():
-#     try:
-#         logger.info(f"Headers: {dict(request.headers)}")
-#         logger.info(f"Raw Body: {request.data.decode()}")
-#         logs_continue_app(f"Headers: {dict(request.headers)}")
-#         logs_continue_app(f"Raw Body: {request.data.decode()}")
-
-#         # Obtener JSON
-#         data = request.get_json(silent=True)
-#         if not data:
-#             msg = "No se recibió JSON válido"
-#             logger.warning(msg)
-#             logs_continue_app(msg)
-#             return jsonify({"error": msg}), 400
-
-#         logger.info(f"JSON recibido correctamente: {data}")
-#         logs_continue_app(f"JSON recibido correctamente: {data}")
-
-#         if data.get("object") != "whatsapp_business_account":
-#             msg = "Objeto no válido en la solicitud"
-#             logger.error(msg)
-#             logs_continue_app(msg)
-#             return jsonify({"error": msg}), 400
-
-#         # Validar entrada y cambios
-#         entry = data.get("entry", [])
-#         if not entry:
-#             return jsonify({"error": "No se encontró 'entry'"}), 400
-
-#         changes = entry[0].get("changes", [])
-#         if not changes:
-#             return jsonify({"error": "No se encontró 'changes'"}), 400
-
-#         value = changes[0].get("value", {})
-#         if not value:
-#             return jsonify({"error": "No se encontró 'value'"}), 400
-
-#         # Ignorar mensajes de estado
-#         if "statuses" in value:
-#             logger.info("Mensaje de estado recibido (ignorado)")
-#             return jsonify({"status": "ignored"}), 200
-
-#         # Obtener mensajes
-#         messages = value.get("messages", [])
-#         if not messages:
-#             return jsonify({"error": "No se encontró 'messages'"}), 400
-
-#         message = messages[0]  # primer mensaje
-#         phone_number = message.get("from", "")
-#         message_type = message.get("type", "")
-
-#         # Procesar según el tipo
-#         if message_type == "text":
-#             message_text = message.get("text", {}).get("body", "")
-#             if not message_text:
-#                 return jsonify({"error": "Mensaje de texto vacío"}), 400
-
-#             bot = RankedResponse(phone_number)
-#             response = bot.Classify(message_text)
-
-#             logger.info(f"Mensaje de {phone_number}: {message_text}")
-#             logger.info(f"Respuesta enviada: {response}")
-#             logs_continue_app(f"{phone_number}: {message_text}")
-#             logs_continue_app(f"Respuesta: {response}")
-
-#         elif message_type == "image":
-#             image_id = message.get("image", {}).get("id", "")
-#             bot = RankedResponse(phone_number)
-#             bot.main_obtener_imagenes(image_id)
-#             logger.info(f"Imagen recibida de {phone_number}, id: {image_id}")
-#             logs_continue_app(f"{phone_number}: Imagen recibida -> {image_id}")
-#             return jsonify({"status": "image processed"}), 200
-
-#         else:
-#             logger.warning(f"Tipo de mensaje no soportado: {message_type}")
-#             logs_continue_app(f"Tipo no soportado: {message_type}")
-#             return jsonify({"status": "ignored"}), 200
-
-#         return jsonify({"status": "success"}), 200
-
-#     except Exception as e:
-#         msg = f"Error inesperado: {str(e)}"
-#         logger.exception(msg)
-#         logs_continue_app(msg)
-#         return jsonify({"error": msg}), 500
 
 @app.route('/stats', methods=['GET'])
 def stats():

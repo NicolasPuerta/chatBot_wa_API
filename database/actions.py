@@ -40,7 +40,6 @@ class Database:
         return pedido
 
     def insertar_imagen(self, imagen: Imagen):
-        # Copiar imagen a carpeta local
         self.db.add(imagen)
         self.db.commit()
         return imagen

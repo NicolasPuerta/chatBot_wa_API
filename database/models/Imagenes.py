@@ -12,9 +12,7 @@ from database.Base import Base
 class Imagen(Base):
     __tablename__ = "imagenes"
 
-    id = Column(Integer, primary_key=True, autoincrement=True)
-    pedido_id = Column(Integer, ForeignKey("pedidos.id"))
-    nombre = Column(String, nullable=False)
+    id = Column(String, primary_key=True, unique=True)
+    pedido_id = Column(Integer, ForeignKey("pedidos.id"), nullable=False)
     url = Column(String, nullable=False)
-
     pedido = relationship("Pedido", back_populates="imagenes")

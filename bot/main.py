@@ -111,7 +111,6 @@ class MainBot:
                     if not guardar_imagen["success"]:
                         return {"error": f"Error al obtener la imagen: {guardar_imagen['error']}"}
                     ultimo_pedido = self.database.obtener_ultimo_pedido(usuario_.id)
-
                     dias_entrega = [0,3,5]
                     dia_actual = datetime.now()
                     fecha_entrega = min(
@@ -120,12 +119,18 @@ class MainBot:
                     )
                     fecha_entrega_final = dia_actual + timedelta((fecha_entrega - dia_actual.weekday()) % 7)
                     ultimo_pedido.fecha = fecha_entrega_final.strftime("%Y-%m-%d")
+                    if not ultimo_pedido:
+                        return {"error": "Error al obtener el último pedido."}
                     pedido_actualizado = self.database.actualizar_pedido(ultimo_pedido)
-                    
-                    if ultimo_pedido:
-                        imagen_ = Imagen(id=id_imagen, pedido_id=ultimo_pedido.id, url=guardar_imagen["url"])
-                        self.database.insertar_imagen(imagen_)
+                    imagen_ = Imagen(
+                        id=id_imagen,                      # el media_id de WhatsApp
+                        pedido_id=ultimo_pedido.id,        # pedido al que se asocia
+                        url=guardar_imagen.get("url", "")  # asegura que no sea None
+                    )
 
+                    imagen_db = self.database.insertar_imagen(imagen_)
+                    if not imagen_db:
+                        return {"error": "Error al insertar la imagen en la base de datos."}
                 usuario_actualizado = self.database.actualizar_usuario(usuario_)
                 if not usuario_actualizado:
                     return {"error": "Error al actualizar el usuario en la base de datos."}
